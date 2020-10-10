@@ -13,10 +13,10 @@ dimy, dimx, channels = first.shape
 
 print(f"X:{dimx}, Y:{dimy}")
 
-ready = cv2.imread("All_nicks.png")
+ready = cv2.imread("whole_pic.png")
 ready_gray = cv2.cvtColor(ready, cv2.COLOR_BGR2GRAY)
 
-threshold = 0.9
+threshold = 0.85
 os.makedirs("conflicts", exist_ok=True)
 
 all_conflicts = ready.copy()
@@ -35,7 +35,7 @@ for number, pic_path in enumerate(all_pics_paths, 1):
         print(f"Not found: {num_text}")
         continue
     else:
-        print(f"Conflict in {num_text}")
+        print(f"Conflict in {os.path.basename(pic_path)}")
 
     new_image = ready.copy()
     color = np.random.randint(70, 255, 3).tolist()
@@ -46,10 +46,10 @@ for number, pic_path in enumerate(all_pics_paths, 1):
         pt1 = (posx, posy)
         pt2 = (posx + dimx, posy + dimy)
 
-        print(f"{str(pt1):<10} -> {pt2}")
+        # print(f"{str(pt1):<10} -> {pt2}")
 
-        cv2.rectangle(new_image, pt1, pt2, color, 10)
-        cv2.rectangle(all_conflicts, pt1, pt2, color, 10)
+        cv2.rectangle(new_image, pt1, pt2, color, 6)
+        cv2.rectangle(all_conflicts, pt1, pt2, color, 6)
 
     cv2.imwrite(f"conflicts/{num_text:>03}.png", new_image)
 cv2.imwrite(f"conflicts/all.png", all_conflicts)
