@@ -66,5 +66,5 @@ temp[:sh1, :sh2, :sh3] = first
 print(whole_pic.shape, temp.shape)
 whole_pic = np.concatenate([whole_pic, temp], axis=1)
 
-cv2.imwrite("All_nicks.png", first)
-cv2.imwrite("whole_pic.png", whole_pic)
+# cv2.imwrite("All_nicks.png", first)
+cv2.imwrite("all_nicks_with_numbers.png", whole_pic)
