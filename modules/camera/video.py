@@ -8,6 +8,9 @@ def start_video():
     return vid
 
 
+eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")
+face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
 gray = True
 cont = False
 lapl = False
@@ -18,7 +21,7 @@ edges = False
 cx = 150
 cy = 80
 
-accuracy = 0.8
+accuracy = 0.85
 
 vid = start_video()
 template = cv2.imread("eye.png")
@@ -33,31 +36,41 @@ while True:
 
     # height, width, channels = bgr_img.shape
 
-    img = bgr_img.copy()
+    gray_img = bgr_img.copy()
 
     if gray:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray_img = cv2.cvtColor(gray_img, cv2.COLOR_BGR2GRAY)
 
     if blur:
-        img = cv2.GaussianBlur(img, (5, 5), 1)
+        gray_img = cv2.GaussianBlur(gray_img, (5, 5), 1)
 
     if lapl:
-        img = cv2.Laplacian(img, cv2.CV_64F)
+        gray_img = cv2.Laplacian(gray_img, cv2.CV_64F)
 
     if edges:
-        img = cv2.Canny(img, cy, cx)
+        gray_img = cv2.Canny(gray_img, cy, cx)
 
-    pos = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
+    pos = cv2.matchTemplate(gray_img, template, cv2.TM_CCOEFF_NORMED)
     loc = np.where(pos >= accuracy)
 
+    "Drawing Matches"
     for pt1 in zip(*loc):
         size_offset = 10
         pt1 = (pt1[1] - size_offset, pt1[0] - size_offset)
         height, width = template.shape
         pt2 = (pt1[0] + height + size_offset * 2, pt1[1] + width + size_offset * 2)
         cv2.rectangle(bgr_img, pt1, pt2, (0, 255, 0), 2)
-    # if sobel:
-    #     img = cv2.Sobel(img, cv2.CV_64F)
+
+    faces = face_cascade.detectMultiScale(gray_img, 1.5, 8)
+    for (x, y, w, h) in faces:
+        pt1 = (x, y)
+        pt2 = (x + w, y + h)
+        cv2.rectangle(bgr_img, pt1, pt2, (0, 255, 255), 2)
+    eyes = eye_cascade.detectMultiScale(gray_img, 1.3, 8)
+    for (x, y, w, h) in eyes:
+        pt1 = (x, y)
+        pt2 = (x + w, y + h)
+        cv2.rectangle(bgr_img, pt1, pt2, (0, 255, 155), 2)
 
     cv2.imshow("Frame", bgr_img)
 
