@@ -158,8 +158,8 @@ class CameraWindow(Frame):
         fgdModel = np.zeros((1, 65), np.float64)
 
         cv2.grabCut(image, mask, rect, bdgModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
-        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
-        image = image * mask2[:, :, np.newaxis]
+        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')[:, :, np.newaxis]
+        image = image * mask2
 
         return image
 
