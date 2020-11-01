@@ -27,10 +27,12 @@ class CameraWindow(Frame):
         self.config = {
                 'grayscale': False,
                 'gc_on': False,
-                'gc_xmin': 0,
-                'gc_xmax': 0,
-                'gc_ymin': 0,
-                'gc_ymax': 0,
+                'xmin': 0,
+                'xmax': 0,
+                'ymin': 0,
+                'ymax': 0,
+                'zmin': 0,
+                'zmax': 0,
                 'draw_rect': False,
         }
 
@@ -70,26 +72,30 @@ class CameraWindow(Frame):
         self.scale1 = Scale(root, label="Refresh", from_=10, to=500, command=self.set_refresh_interval)
         self.scale1.pack(side="left")
 
-        self.scale2 = Scale(root, label="X-Min", to=1000)
+        self.scale2 = Scale(root, label="X-Min", to=255)
         self.scale2.pack(side="left")
-        self.scale2.configure(command=lambda val: self.set_int_value('gc_xmin', val))
+        self.scale2.configure(command=lambda val: self.set_int_value('xmin', val))
 
-        self.scale4 = Scale(root, label="X-Max", to=1000)
+        self.scale4 = Scale(root, label="X-Max", to=255)
         self.scale4.pack(side="left")
-        self.scale4.configure(command=lambda val: self.set_int_value('gc_xmax', val))
+        self.scale4.configure(command=lambda val: self.set_int_value('xmax', val))
 
-        self.scale3 = Scale(root, label="Y-Min", to=1000)
+        self.scale3 = Scale(root, label="Y-Min", to=255)
         self.scale3.pack(side="left")
-        self.scale3.configure(command=lambda val: self.set_int_value('gc_ymin', val))
+        self.scale3.configure(command=lambda val: self.set_int_value('ymin', val))
 
-        self.scale5 = Scale(root, label="Y-Max", to=1000)
+        self.scale5 = Scale(root, label="Y-Max", to=255)
         self.scale5.pack(side="left")
-        self.scale5.configure(command=lambda val: self.set_int_value('gc_ymax', val))
+        self.scale5.configure(command=lambda val: self.set_int_value('ymax', val))
 
-        self.scale6 = Scale(root, label="_6")
-        self.scale6.pack(side="left")
-        self.scale7 = Scale(root, label="_7")
-        self.scale7.pack(side="left")
+        self.scale3 = Scale(root, label="Z-Min", to=255)
+        self.scale3.pack(side="left")
+        self.scale3.configure(command=lambda val: self.set_int_value('zmin', val))
+
+        self.scale5 = Scale(root, label="Z-Max", to=255)
+        self.scale5.pack(side="left")
+        self.scale5.configure(command=lambda val: self.set_int_value('zmax', val))
+
         self.scale8 = Scale(root, label="_8")
         self.scale8.pack(side="left")
 
@@ -111,45 +117,40 @@ class CameraWindow(Frame):
 
     def update(self):
         ret, frame = self.cam.get_frame()
-        photo = self.process_image(frame)
+        image = self.process_image(frame)
+        photo = Image.fromarray(image)
+        photo = ImageTk.PhotoImage(image=photo)
         self.memory.append(photo)  # reference to photo must persist
         self.pic.create_image(0, 0, image=photo, anchor='nw')
-
         self.root.after(self.refresh_interval, self.update)
 
     def process_image(self, image):
         """Returns Tkinter Canvas photo object"""
+        xmin = self.config['xmin']
+        xmax = self.config['xmax']
+        ymin = self.config['ymin']
+        ymax = self.config['ymax']
+        zmin = self.config['zmin']
+        zmax = self.config['zmax']
 
-        # image = np.frombuffer(image, np.uint8)
-        # image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-        rect = [
-                self.config['gc_xmin'],
-                self.config['gc_ymin'],
-                self.config['gc_xmax'],
-                self.config['gc_ymax'],
-        ]
-        if rect[0] > rect[2]:
-            rect[0], rect[2] = rect[2], rect[0]
-        if rect[1] > rect[3]:
-            rect[3], rect[1] = rect[1], rect[3]
-
-        if self.config['grayscale']:
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        else:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            if self.config["gc_on"]:
-                image = self.grab_cut(image, rect)
-
-        if self.config['draw_rect']:
-            pt1 = (rect[0], rect[1])
-            pt2 = (rect[2], rect[3])
-            cv2.rectangle(image, pt1, pt2, (0, 255, 255), 3)
-
-        image = Image.fromarray(image)
-        image = ImageTk.PhotoImage(image=image)
+        image = self.strip_color(image, xmin, xmax, ymin, ymax, zmin, zmax)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return image
+
+    def strip_color(self, image, hmin, hmax, smin, smax, vmin, vmax):
+        frame_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        lower_orange = np.array([hmin, smin, vmin])
+        upper_orange = np.array([hmax, smax, vmax])
+
+        mask_alpha = cv2.inRange(frame_hsv, lower_orange, upper_orange)
+        mask = mask_alpha < 1
+
+        frame_hsv[mask, :] = 0
+        # frame_hsv[:, :, 1] = 0
+        # frame_hsv[:, :, 2] = 0
+        frame = cv2.cvtColor(frame_hsv, cv2.COLOR_HSV2BGR)
+        return frame
 
     def grab_cut(self, image, rect):
         mask = np.zeros(image.shape[:2], np.uint8)

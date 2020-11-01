@@ -7,12 +7,13 @@ import os
 
 def start():
     cap = cv2.VideoCapture("people-walking.mp4")
+    cap = cv2.VideoCapture("CINEMATIC Highway DRONE Footage.mp4")
     tracker = []
     return cap, tracker
 
 
 video, tracker = start()
-fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=100)
+fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=10)
 
 "First frame is always changed"
 ret, frame = video.read()
@@ -66,9 +67,15 @@ while True:
         good_mask[slice_of_interest] = temp
 
     red_mask = (0, 0, 1) * good_mask
+    red_raw = (0, 0, 1) * fgmask
+
     # print(red_mask.shape)
     red_mask = np.where(red_mask > 5)
-    highlighted[red_mask] = 250
+    red_raw = np.where(red_raw > 0)
+
+    highlighted[red_mask] = 255
+
+    frame[red_raw] = 255
 
     mass_y, mass_x, mass_z = ndimage.center_of_mass(good_mask)
 
@@ -103,5 +110,12 @@ while True:
     elif key == ord('r'):
         video, tracker = start()
         print(tracker)
+    elif key == 81:
+        pos = video.get(cv2.CAP_PROP_POS_MSEC)
+        video.set(cv2.CAP_PROP_POS_MSEC, pos - 5_000)
+    elif key == 83:
+        pos = video.get(cv2.CAP_PROP_POS_MSEC)
+        video.set(cv2.CAP_PROP_POS_MSEC, pos + 5_000)
+        # forward
 
 cv2.destroyAllWindows()

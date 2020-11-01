@@ -9,7 +9,6 @@ face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 avatars = glob.glob("avatars/*png")
 avatars.sort()
 export_dir = "exports"
-export_dir = "exports"
 face_count = 0
 MAX_SIZE = 256
 os.makedirs(export_dir, exist_ok=True)
