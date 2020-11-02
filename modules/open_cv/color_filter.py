@@ -9,7 +9,7 @@ DARK = False
 
 while True:
     _, original = video.read()
-    blurded = cv2.blur(original, (15, 15))
+    blurded = cv2.medianBlur(original, 15)
     frame_hsv = cv2.cvtColor(blurded, cv2.COLOR_BGR2HSV)
     h, w, c = original.shape
 
@@ -20,14 +20,15 @@ while True:
         lower = np.array([0, 0, 0])
         upper = np.array([255, 50, 100])
     else:
-        lower = np.array([110, 0, 0])
-        upper = np.array([130, 255, 255])
+        lower = np.array([100, 20, 90])
+        upper = np.array([123, 255, 255])
 
     # frame_hsv = cv2.blur(frame_hsv, (15, 15))
-    mask_alpha = cv2.inRange(frame_hsv, lower, upper)
+    initial_mask = cv2.inRange(frame_hsv, lower, upper)
 
-    mask_alpha = cv2.erode(mask_alpha, (7, 7), iterations=5)
-    mask_alpha = cv2.dilate(mask_alpha, (7, 7), iterations=5)
+    kernel = np.ones((5, 5))
+    mask_alpha = cv2.erode(initial_mask, kernel, iterations=1)
+    mask_alpha = cv2.dilate(mask_alpha, kernel, iterations=1)
     mask = mask_alpha > 0  # True if matching
 
     mask_pic = cv2.cvtColor(mask_alpha, cv2.COLOR_GRAY2BGR)
@@ -47,10 +48,20 @@ while True:
     fully_saturated[:, :, 1] = 255
     fully_saturated[:, :, 2] = 255
     fully_saturated = cv2.cvtColor(fully_saturated, cv2.COLOR_HSV2BGR)
-    out1 = np.concatenate([fully_saturated, original, ], axis=1)
+    initial_mask_bgr = cv2.cvtColor(initial_mask, cv2.COLOR_GRAY2BGR)
+    out1 = np.concatenate([initial_mask_bgr, original, ], axis=1)
     out2 = np.concatenate([mask_pic, output, ], axis=1)
 
     out = np.concatenate([out1, out2], axis=0)
+
+    "Morphing to get rid or negative false and positive false"
+    openings = cv2.morphologyEx(initial_mask, cv2.MORPH_OPEN, kernel)
+    closings = cv2.morphologyEx(initial_mask, cv2.MORPH_CLOSE, kernel)
+    morphs = np.concatenate([initial_mask, openings, closings], axis=1)
+    cv2.imshow("initial mask / open / close", morphs)
+    # cv2.MORPH_BLACKHAT
+    # cv2.MORPH_TOPHAT
+
     cv2.imshow("Me", out)
 
     key = cv2.waitKey(delay=10)
