@@ -146,9 +146,6 @@ class CameraWindow(Frame):
         mask_alpha = cv2.inRange(frame_hsv, lower_orange, upper_orange)
         mask = mask_alpha < 1
 
-        frame_hsv[mask, :] = 0
-        # frame_hsv[:, :, 1] = 0
-        # frame_hsv[:, :, 2] = 0
         frame = cv2.cvtColor(frame_hsv, cv2.COLOR_HSV2BGR)
         return frame
 
@@ -212,7 +209,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Camera View")
 
-    with MyCameraCapture() as c1:
+    with MyCameraCapture(0) as c1:
         cam_win = CameraWindow(root, c1)
         width, height = c1.width, c1.height
         cam_win.set_pic_size(width=width, height=height)
