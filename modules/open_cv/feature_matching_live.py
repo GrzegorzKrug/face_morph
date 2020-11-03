@@ -3,9 +3,9 @@ import imutils
 import time
 import cv2
 
-pen_image = cv2.imread("src_images/pen.jpg", 0)
+pen_image = cv2.imread("src_images/pen.jpg", 1)
 pen_image = imutils.resize(pen_image, width=800)
-pen_image = pen_image[100:-100, 100:-100]
+pen_image = pen_image[100:-100, 100:-100, :]
 
 orb = cv2.ORB_create()
 
@@ -30,13 +30,13 @@ while True:
     kp1, des1 = orb.detectAndCompute(pen_image, None)
     kp2, des2 = orb.detectAndCompute(gray, None)
 
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING2, crossCheck=True)
 
     try:
         matches = bf.match(des1, des2)
         matches = sorted(matches, key=lambda x: x.distance)
 
-        img3 = cv2.drawMatches(pen_image, kp1, frame, kp2, matches[:50], None, flags=2)
+        img3 = cv2.drawMatches(pen_image, kp1, frame, kp2, matches[:10], None, flags=2)
         cv2.imshow("Image", img3)
     except Exception:
         pass
