@@ -12,7 +12,8 @@ while True:
 
     all_chans = []
     for chan in frame[:, :]:
-        what, binary = cv2.threshold(chan, 40, 255, cv2.THRESH_BINARY)
+        _, binary = cv2.threshold(chan, 70, 255, cv2.THRESH_BINARY)
+        # binary = cv2.adaptiveThreshold(chan, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 151, 1.9)
         all_chans.append(binary)
 
     all_chans = np.array(all_chans)
@@ -28,8 +29,8 @@ while True:
     # cv2.imshow("Frame", frame)
     # cv2.imshow("all_chans", all_chans)
     cv2.imshow("chan_mean", chan_mean)
-    cv2.imshow("dil", dil)
-    cv2.imshow("ero", ero)
+    # cv2.imshow("dil", dil)
+    # cv2.imshow("ero", ero)
 
     key = cv2.waitKey(100)
     if key == ord("q"):
