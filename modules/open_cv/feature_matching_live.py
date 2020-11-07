@@ -36,7 +36,7 @@ while True:
         matches = bf.match(des1, des2)
         matches = sorted(matches, key=lambda x: x.distance)
 
-        img3 = cv2.drawMatches(pen_image, kp1, frame, kp2, matches[:10], None, flags=2)
+        img3 = cv2.drawMatches(pen_image, kp1, frame, kp2, matches[:2], None, flags=2)
         cv2.imshow("Image", img3)
     except Exception:
         pass
