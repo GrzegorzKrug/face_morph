@@ -7,6 +7,11 @@ video = cv2.VideoCapture(0)
 ORANGE = False
 DARK = False
 
+
+def on_bar_change(value):
+    print(value)
+
+
 while True:
     _, original = video.read()
     blurded = cv2.medianBlur(original, 15)
@@ -58,11 +63,18 @@ while True:
     openings = cv2.morphologyEx(initial_mask, cv2.MORPH_OPEN, kernel)
     closings = cv2.morphologyEx(initial_mask, cv2.MORPH_CLOSE, kernel)
     morphs = np.concatenate([initial_mask, openings, closings], axis=1)
+
+    "Ims show"
     cv2.imshow("initial mask / open / close", morphs)
+    cv2.imshow("Me", out)
+
+    "Trackbars"
+    cv2.createTrackbar("Value", "Me", 0, 255, on_bar_change)
+    val = cv2.getTrackbarPos("Value", "Me")
+    
+    "Morphs differents, open vs close and vice versa"
     # cv2.MORPH_BLACKHAT
     # cv2.MORPH_TOPHAT
-
-    cv2.imshow("Me", out)
 
     key = cv2.waitKey(delay=10)
     if key == ord("q"):
