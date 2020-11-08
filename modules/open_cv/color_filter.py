@@ -71,7 +71,7 @@ while True:
     "Trackbars"
     cv2.createTrackbar("Value", "Me", 0, 255, on_bar_change)
     val = cv2.getTrackbarPos("Value", "Me")
-    
+
     "Morphs differents, open vs close and vice versa"
     # cv2.MORPH_BLACKHAT
     # cv2.MORPH_TOPHAT
