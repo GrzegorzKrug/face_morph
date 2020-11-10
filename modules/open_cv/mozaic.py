@@ -13,7 +13,7 @@ def time_it_dec(func):
         result = func(*args, **kwargs)
         time_end = time.time()
         duration = time_end - time0
-        print(f"{func.__name__} was executed in {duration:>6.1f}s")
+        print(f"{func.__name__} was executed in {duration:>6.2f}s")
         return result
 
     return wrapper
@@ -27,7 +27,7 @@ def create_palette():
 
     for image_path in all_images:
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
         height, width, channels = image.shape
 
         if height < 15 or width < 15:
@@ -35,20 +35,23 @@ def create_palette():
             continue
         elif height != width:
             print(f"This image is not squared: {height:>4}, {width:>4} - {image_path}")
-            continue
+            image = squareify_stamp(image_path)
+
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         hue, saturation, value = np.mean(hsv, axis=0).mean(axis=0)
         palette[image_path] = {"h": hue, "sat": saturation, "val": value}
 
     return palette
 
 
+# @time_it_dec
 def find_closes_image(_palette, targ_h, targ_s, targ_v):
     error = 255 ** 2
     best = None
     for path, inner_dict in _palette.items():
         h, s, v = inner_dict.values()
-        cur_error = abs(targ_h - h) + abs(targ_s - s) + abs(targ_v - v)
-        # cur_error = (targ_h - h) ** 2 + (targ_s - s) ** 2 + (targ_v - v) ** 2
+        cur_error = abs(targ_h - h) + abs(targ_s - s) + abs(targ_v - v)  # Linear error
+        # cur_error = (targ_h - h) ** 2 + (targ_s - s) ** 2 + (targ_v - v) ** 2  # squared error
         if cur_error < error:
 
             error = cur_error
@@ -82,6 +85,21 @@ def get_mozaic(targ_path):
                 replacer = imutils.resize(replacer, width=PIX_SIZE)
                 roi[:, :, :] = replacer
     return output
+
+
+def squareify_stamp(img_path):
+    image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+    h, w, c = image.shape
+    if h < w:
+        w = h
+    elif w < h:
+        h = w
+    else:
+        print(f"Images shape is the same, not editing: {img_path}")
+        return None
+    new_img = image[0:h, 0:w, :]
+    cv2.imwrite(img_path, new_img)
+    return new_img
 
 
 target_path = "src_images/salema-beach.jpg"
