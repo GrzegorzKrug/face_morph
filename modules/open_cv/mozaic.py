@@ -60,6 +60,7 @@ def find_closes_image(_palette, targ_h, targ_s, targ_v):
     return best
 
 
+@time_it_dec
 def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
     target = cv2.imread(targ_path, cv2.IMREAD_COLOR)
     target_hsv = cv2.cvtColor(target, cv2.COLOR_BGR2HSV)
@@ -116,7 +117,7 @@ def make_stamp_square(img_path):
 
 PIX_SIZE = 10
 
-target_path = "src_images/cat.jpg"
+target_path = "src_images/artorias_battle.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
 out_path = "output/mozaic-0.png"
@@ -124,12 +125,12 @@ num = 0
 
 while os.path.isfile(out_path):
     num += 1
-    out_path = f"output/mozaic-{num}.png"
+    out_path = f"output/mozaic-{num:>03}.png"
 
 print(f"Saved to: {out_path}")
 orig = cv2.imread(target_path)
 last_compare = np.concatenate([orig, output], axis=1)
 cv2.imwrite(out_path, output)
 # cv2.imwrite("output/last_mozaic_compare.png", last_compare)
-cv2.imshow("Output", output)
+# cv2.imshow("Output", output)
 cv2.waitKey(30_000)
