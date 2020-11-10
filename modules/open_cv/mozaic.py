@@ -114,7 +114,7 @@ def make_stamp_square(img_path):
     return new_img
 
 
-PIX_SIZE = 5
+PIX_SIZE = 10
 
 target_path = "src_images/cat.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
@@ -132,4 +132,4 @@ last_compare = np.concatenate([orig, output], axis=1)
 cv2.imwrite(out_path, output)
 # cv2.imwrite("output/last_mozaic_compare.png", last_compare)
 cv2.imshow("Output", output)
-cv2.waitKey()
+cv2.waitKey(30_000)
