@@ -60,7 +60,7 @@ def find_closes_image(_palette, targ_h, targ_s, targ_v):
     return best
 
 
-def get_mozaic(targ_path, ignore_image_size=False):
+def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
     target = cv2.imread(targ_path, cv2.IMREAD_COLOR)
     target_hsv = cv2.cvtColor(target, cv2.COLOR_BGR2HSV)
     h, w, c = target.shape
@@ -73,6 +73,7 @@ def get_mozaic(targ_path, ignore_image_size=False):
     output = np.zeros((h, w, 3), dtype=np.uint8)
 
     for cur_row in range(0, h, PIX_SIZE):
+        print(f"Current row: {cur_row}")
         for cur_col in range(0, w, PIX_SIZE):
             current_roi_slice = slice(cur_row, cur_row + PIX_SIZE), slice(cur_col, cur_col + PIX_SIZE)
 
@@ -87,10 +88,12 @@ def get_mozaic(targ_path, ignore_image_size=False):
                 try:
                     roi[:, :, :] = replacer
                 except ValueError as err:
-                    if ignore_image_size:
+                    if ignore_image_size and fill_border_at_error:
                         last_h, last_w, _ = roi.shape
                         replacer = replacer[0:last_h, 0:last_w, :]
                         roi[:, :, :] = replacer
+                    elif ignore_image_size:
+                        pass
                     else:
                         print(f"{err}")
     return output
@@ -111,9 +114,9 @@ def make_stamp_square(img_path):
     return new_img
 
 
-PIX_SIZE = 10
+PIX_SIZE = 3
 
-target_path = "src_images/philadelphia.jpg"
+target_path = "src_images/photo_wbook.png"
 output = get_mozaic(target_path, ignore_image_size=True)
 
 cv2.imshow("Output", output)
