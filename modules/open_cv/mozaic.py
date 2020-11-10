@@ -116,7 +116,7 @@ def make_stamp_square(img_path):
 
 PIX_SIZE = 5
 
-target_path = "src_images/space1.jpg"
+target_path = "src_images/cat.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
 out_path = "output/mozaic-0.png"
