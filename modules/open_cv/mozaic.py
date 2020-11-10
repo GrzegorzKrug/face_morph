@@ -114,12 +114,11 @@ def make_stamp_square(img_path):
     return new_img
 
 
-PIX_SIZE = 3
+PIX_SIZE = 5
 
-target_path = "src_images/photo_wbook.png"
+target_path = "src_images/just_do_it.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
-cv2.imshow("Output", output)
 out_path = "output/mozaic-0.png"
 num = 0
 
@@ -130,7 +129,8 @@ while os.path.isfile(out_path):
 print(f"Saved to: {out_path}")
 orig = cv2.imread(target_path)
 last_compare = np.concatenate([orig, output], axis=1)
-cv2.imwrite(out_path, last_compare)
+cv2.imwrite(out_path, output)
 # cv2.imwrite("output/last_mozaic_compare.png", last_compare)
+# cv2.imshow("Output", output)
 cv2.imshow("Compare", last_compare)
 cv2.waitKey()
