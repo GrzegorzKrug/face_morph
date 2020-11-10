@@ -35,12 +35,12 @@ def create_palette():
             continue
         elif height != width:
             print(f"This image is not squared: {height:>4}, {width:>4} - {image_path}")
-            image = squareify_stamp(image_path)
+            image = make_stamp_square(image_path)
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         hue, saturation, value = np.mean(hsv, axis=0).mean(axis=0)
         palette[image_path] = {"h": hue, "sat": saturation, "val": value}
-
+    print(f"Palette size: {len(palette.keys())}")
     return palette
 
 
@@ -60,14 +60,14 @@ def find_closes_image(_palette, targ_h, targ_s, targ_v):
     return best
 
 
-def get_mozaic(targ_path):
+def get_mozaic(targ_path, ignore_image_size=False):
     target = cv2.imread(targ_path, cv2.IMREAD_COLOR)
     target_hsv = cv2.cvtColor(target, cv2.COLOR_BGR2HSV)
     h, w, c = target.shape
-    PIX_SIZE = 5
+
     palette = create_palette()
-    if h % PIX_SIZE or w % PIX_SIZE:
-        print("Invalid size")
+    if (h % PIX_SIZE or w % PIX_SIZE) and not ignore_image_size:
+        print(f"Invalid size, H:{h}%->{h % PIX_SIZE}, W:{w}->{w % PIX_SIZE}")
         sys.exit(0)
 
     output = np.zeros((h, w, 3), dtype=np.uint8)
@@ -75,6 +75,7 @@ def get_mozaic(targ_path):
     for cur_row in range(0, h, PIX_SIZE):
         for cur_col in range(0, w, PIX_SIZE):
             current_roi_slice = slice(cur_row, cur_row + PIX_SIZE), slice(cur_col, cur_col + PIX_SIZE)
+
             roi = output[current_roi_slice]
             curr_target_hsv = target_hsv[current_roi_slice]
 
@@ -82,12 +83,20 @@ def get_mozaic(targ_path):
             found = find_closes_image(palette, hue, saturation, value)
             if found:
                 replacer = cv2.imread(found, cv2.IMREAD_COLOR)
-                replacer = imutils.resize(replacer, width=PIX_SIZE)
-                roi[:, :, :] = replacer
+                replacer = imutils.resize(replacer, height=PIX_SIZE)
+                try:
+                    roi[:, :, :] = replacer
+                except ValueError as err:
+                    if ignore_image_size:
+                        last_h, last_w, _ = roi.shape
+                        replacer = replacer[0:last_h, 0:last_w, :]
+                        roi[:, :, :] = replacer
+                    else:
+                        print(f"{err}")
     return output
 
 
-def squareify_stamp(img_path):
+def make_stamp_square(img_path):
     image = cv2.imread(img_path, cv2.IMREAD_COLOR)
     h, w, c = image.shape
     if h < w:
@@ -102,17 +111,23 @@ def squareify_stamp(img_path):
     return new_img
 
 
-target_path = "src_images/salema-beach.jpg"
-output = get_mozaic(target_path)
+PIX_SIZE = 10
+
+target_path = "src_images/philadelphia.jpg"
+output = get_mozaic(target_path, ignore_image_size=True)
 
 cv2.imshow("Output", output)
 out_path = "output/mozaic-0.png"
 num = 0
+
 while os.path.isfile(out_path):
     num += 1
-    print(num)
     out_path = f"output/mozaic-{num}.png"
 
-cv2.imwrite(out_path, output)
 print(f"Saved to: {out_path}")
+orig = cv2.imread(target_path)
+last_compare = np.concatenate([orig, output], axis=1)
+cv2.imwrite(out_path, last_compare)
+# cv2.imwrite("output/last_mozaic_compare.png", last_compare)
+cv2.imshow("Compare", last_compare)
 cv2.waitKey()
