@@ -29,7 +29,7 @@ def create_palette():
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
         height, width, channels = image.shape
-
+        image = imutils.resize(image, width=PIX_SIZE)
         if height < 15 or width < 15:
             print(f"This image is too small: {height:>4}, {width:>4} - {image_path}")
             continue
@@ -50,8 +50,8 @@ def find_closes_image(_palette, targ_h, targ_s, targ_v):
     best = None
     for path, inner_dict in _palette.items():
         h, s, v = inner_dict.values()
-        cur_error = abs(targ_h - h) + abs(targ_s - s) + abs(targ_v - v)  # Linear error
-        # cur_error = (targ_h - h) ** 2 + (targ_s - s) ** 2 + (targ_v - v) ** 2  # squared error
+        # cur_error = abs(targ_h - h) + abs(targ_s - s) + abs(targ_v - v)  # Linear error
+        cur_error = (targ_h - h) ** 2 + (targ_s - s) ** 2 + (targ_v - v) ** 2  # squared error
         if cur_error < error:
 
             error = cur_error
@@ -116,7 +116,7 @@ def make_stamp_square(img_path):
 
 PIX_SIZE = 5
 
-target_path = "src_images/just_do_it.jpg"
+target_path = "src_images/space1.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
 out_path = "output/mozaic-0.png"
@@ -131,6 +131,5 @@ orig = cv2.imread(target_path)
 last_compare = np.concatenate([orig, output], axis=1)
 cv2.imwrite(out_path, output)
 # cv2.imwrite("output/last_mozaic_compare.png", last_compare)
-# cv2.imshow("Output", output)
-cv2.imshow("Compare", last_compare)
+cv2.imshow("Output", output)
 cv2.waitKey()
