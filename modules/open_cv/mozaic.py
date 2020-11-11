@@ -29,7 +29,7 @@ def create_palette():
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
         height, width, channels = image.shape
-        image = imutils.resize(image, width=PIX_SIZE)
+        image = imutils.resize(image, width=AVATAR_SIZE)
         if height < 15 or width < 15:
             print(f"This image is too small: {height:>4}, {width:>4} - {image_path}")
             continue
@@ -37,8 +37,12 @@ def create_palette():
             print(f"This image is not squared: {height:>4}, {width:>4} - {image_path}")
             image = make_stamp_square(image_path)
 
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        hue, saturation, value = np.mean(hsv, axis=0).mean(axis=0)
+        if USE_HSV:
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            hue, saturation, value = np.mean(hsv, axis=0).mean(axis=0)
+        else:
+            # hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            hue, saturation, value = np.mean(image, axis=0).mean(axis=0)
         palette[image_path] = {"h": hue, "sat": saturation, "val": value}
     print(f"Palette size: {len(palette.keys())}")
     return palette
@@ -50,13 +54,11 @@ def find_closes_image(_palette, targ_h, targ_s, targ_v):
     best = None
     for path, inner_dict in _palette.items():
         h, s, v = inner_dict.values()
-        # cur_error = abs(targ_h - h) + abs(targ_s - s) + abs(targ_v - v)  # Linear error
         cur_error = (targ_h - h) ** 2 + (targ_s - s) ** 2 + (targ_v - v) ** 2  # squared error
         if cur_error < error:
 
             error = cur_error
             best = path
-    # print(f"{targ_h}{targ_s}{targ_v}", error, best)
     return best
 
 
@@ -67,25 +69,35 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
     h, w, c = target.shape
 
     palette = create_palette()
-    if (h % PIX_SIZE or w % PIX_SIZE) and not ignore_image_size:
-        print(f"Invalid size, H:{h}%->{h % PIX_SIZE}, W:{w}->{w % PIX_SIZE}")
+    if h % PIXEL_RATIO or w % PIXEL_RATIO:
+        print(f"Invalid size, H:{h}%->{h % PIXEL_RATIO}, W:{w}->{w % PIXEL_RATIO}")
         sys.exit(0)
 
-    output = np.zeros((h, w, 3), dtype=np.uint8)
+    output = np.zeros(
+            (h * AVATAR_SIZE // PIXEL_RATIO, w * AVATAR_SIZE // PIXEL_RATIO, 3),
+            dtype=np.uint8
+    )
 
-    for cur_row in range(0, h, PIX_SIZE):
+    for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
         print(f"Current row: {cur_row}")
-        for cur_col in range(0, w, PIX_SIZE):
-            current_roi_slice = slice(cur_row, cur_row + PIX_SIZE), slice(cur_col, cur_col + PIX_SIZE)
+        for col_num, cur_col in enumerate(range(0, w, PIXEL_RATIO)):
+            target_slice = slice(cur_row, cur_row + PIXEL_RATIO), slice(cur_col, cur_col + PIXEL_RATIO)
+            output_slice = (
+                    slice(row_num * AVATAR_SIZE, row_num * AVATAR_SIZE + AVATAR_SIZE),
+                    slice(col_num * AVATAR_SIZE, col_num * AVATAR_SIZE + AVATAR_SIZE)
+            )
 
-            roi = output[current_roi_slice]
-            curr_target_hsv = target_hsv[current_roi_slice]
+            roi = output[output_slice]
+            if USE_HSV:
+                curr_target_color = target_hsv[target_slice]
+            else:
+                curr_target_color = target[target_slice]
 
-            hue, saturation, value = np.mean(curr_target_hsv, axis=0).mean(axis=0)
+            hue, saturation, value = np.mean(curr_target_color, axis=0).mean(axis=0)
             found = find_closes_image(palette, hue, saturation, value)
             if found:
                 replacer = cv2.imread(found, cv2.IMREAD_COLOR)
-                replacer = imutils.resize(replacer, height=PIX_SIZE)
+                replacer = imutils.resize(replacer, height=AVATAR_SIZE)
                 try:
                     roi[:, :, :] = replacer
                 except ValueError as err:
@@ -115,22 +127,28 @@ def make_stamp_square(img_path):
     return new_img
 
 
-PIX_SIZE = 10
+"Params"
+USE_HSV = False
+PIXEL_RATIO = 4
+AVATAR_SIZE = 10
+SAVE_EXT = "jpg"
 
-target_path = "src_images/artorias_battle.jpg"
+"Input photo"
+target_path = "src_images/grumpy.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
-out_path = "output/mozaic-0.png"
+"Find non overwriting path"
+out_path = f"output/mozaic-000.{SAVE_EXT}"
 num = 0
-
 while os.path.isfile(out_path):
     num += 1
-    out_path = f"output/mozaic-{num:>03}.png"
+    out_path = f"output/mozaic-{num:>03}.{SAVE_EXT}"
 
-print(f"Saved to: {out_path}")
-orig = cv2.imread(target_path)
-last_compare = np.concatenate([orig, output], axis=1)
+"Save picture"
 cv2.imwrite(out_path, output)
-# cv2.imwrite("output/last_mozaic_compare.png", last_compare)
-# cv2.imshow("Output", output)
+print(f"Saved to: {out_path}")
+
+"Preview"
+preview = imutils.resize(output, height=500)
+cv2.imshow("small preview", preview)
 cv2.waitKey(30_000)
