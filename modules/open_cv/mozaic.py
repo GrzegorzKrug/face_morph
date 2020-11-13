@@ -84,7 +84,7 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
             dtype=np.uint8
     )
     # que = Queue(20)
-    pool = Pool(50)
+    pool = Pool(10)
 
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
 
@@ -153,12 +153,12 @@ def make_stamp_square(img_path):
 
 "Params"
 USE_HSV = False
-PIXEL_RATIO = 4
+PIXEL_RATIO = 2
 AVATAR_SIZE = 50
 SAVE_EXT = "jpg"
 
 "Input photo"
-target_path = "src_images/cat.jpg"
+target_path = "src_images/loki.jpg"
 print(f"Started: {target_path}")
 
 name = str(os.path.basename(target_path)).split('.')[0]
@@ -173,7 +173,7 @@ while os.path.isfile(out_path):
 
 "Save picture"
 cv2.imwrite(out_path, output)
-print(f"Saved to: {out_path}")
+print(f"Saved to: {out_path}, Pixel ratio: {PIXEL_RATIO}")
 
 "Preview"
 preview = imutils.resize(output, height=500)
