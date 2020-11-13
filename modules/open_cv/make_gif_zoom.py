@@ -67,53 +67,105 @@ def big_picture_viewer():
             break
 
 
-FRAMES = 500
-origin_x = 21_300
-origin_y = 17_250
-origin_width = 80
-origin_height = 50
+def make_gif():
+    FRAMES = 500
+    OUTPUT_HEIGHT = 300
+    origin_x = 21_300 - 15
+    origin_y = 17_250
+    origin_width = 80
+    origin_height = 50
 
-arr_x = np.linspace(origin_x, 0, FRAMES)
-arr_y = np.linspace(origin_y, 0, FRAMES)
-arr_height = np.linspace(origin_height, HEIGHT, FRAMES)
-arr_width = np.linspace(origin_width, WIDTH, FRAMES)
+    arr_x = np.linspace(origin_x, 0, FRAMES)
+    arr_y = np.linspace(origin_y, 0, FRAMES)
+    arr_height = np.linspace(origin_height, HEIGHT, FRAMES)
+    arr_width = np.linspace(origin_width, WIDTH, FRAMES)
 
-roi_slice = slice(origin_y, origin_y + origin_height), \
-            slice(origin_x, origin_x + origin_width), \
-            slice(None)
-frame = image[roi_slice]
-frame = imutils.resize(frame, height=500)
-pil_image = image_array_to_pillow(frame)
-
-framerate = 1 / 60
-duration = 1 / framerate
-frames_list = [pil_image, pil_image, pil_image]
-
-for fr, x, y, w, h in zip(range(FRAMES), arr_x, arr_y, arr_width, arr_height):
-    if 490 > fr > 30 and (fr % 2 or fr % 3):
-        continue
-    print(f"Frame: {fr}")
-    x = int(x)
-    y = int(y)
-    w = int(w)
-    h = int(h)
-    roi_slice = slice(y, y + h), slice(x, x + w), slice(None)
-    roi = image[roi_slice]
-    # print(roi_slice)
-
-    frame = imutils.resize(roi, height=500)
+    roi_slice = slice(origin_y, origin_y + origin_height), \
+                slice(origin_x, origin_x + origin_width), \
+                slice(None)
+    frame = image[roi_slice]
+    frame = imutils.resize(frame, height=OUTPUT_HEIGHT)
     pil_image = image_array_to_pillow(frame)
-    frames_list.append(pil_image)
-    # print(roi.shape, frame.shape)
 
-#     cv2.imshow("Frame", frame)
-#
-#     key = cv2.waitKey(100)
-#     if key == ord('q'):
-#         sys.exit(0)
-#
-# cv2.waitKey(10_000)
-frames_list.append(pil_image)
-frames_list.append(pil_image)
-frames_list[0].save(f"zoom.gif", format="GIF", append_images=frames_list[1:],
-                    save_all=True, optimize=False, duration=duration, loop=0)
+    framerate = 1 / 120
+    duration = 1 / framerate
+    frames_list = [pil_image, pil_image, pil_image]
+
+    for fr, x, y, w, h in zip(range(FRAMES), arr_x, arr_y, arr_width, arr_height):
+        if 490 > fr > 20 and (fr % 2 or fr % 3 or fr % 4):
+            continue
+        print(f"Frame: {fr}")
+        x = int(x)
+        y = int(y)
+        w = int(w)
+        h = int(h)
+        roi_slice = slice(y, y + h), slice(x, x + w), slice(None)
+        roi = image[roi_slice]
+        # print(roi_slice)
+
+        frame = imutils.resize(roi, height=OUTPUT_HEIGHT)
+        pil_image = image_array_to_pillow(frame)
+        frames_list.append(pil_image)
+
+    frames_list.append(pil_image)
+    frames_list.append(pil_image)
+    frames_list[0].save(f"zoom.gif", format="GIF", append_images=frames_list[1:],
+                        save_all=True, optimize=False, duration=duration, loop=0)
+    print(f"Saved GIF.")
+
+
+def make_video():
+    FRAMES = 500
+    OUTPUT_HEIGHT = 500
+    OUTPUT_WIDTH = 800
+
+    origin_x = 21_300 - 15
+    origin_y = 17_250
+    origin_width = 80
+    origin_height = 50
+
+    arr_x = np.linspace(origin_x, 0, FRAMES)
+    arr_y = np.linspace(origin_y, 0, FRAMES)
+    arr_height = np.linspace(origin_height, HEIGHT, FRAMES)
+    arr_width = np.linspace(origin_width, WIDTH, FRAMES)
+
+    roi_slice = slice(origin_y, origin_y + origin_height), \
+                slice(origin_x, origin_x + origin_width), \
+                slice(None)
+    frame = image[roi_slice]
+    frame = cv2.resize(frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+
+    framerate = 10
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    path = "video.mp4"
+    writer = cv2.VideoWriter(path, fourcc, framerate, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+
+    for x in range(framerate):
+        writer.write(frame)
+
+    for fr, x, y, w, h in zip(range(FRAMES), arr_x, arr_y, arr_width, arr_height):
+        if 490 > fr > 20 and (fr % 2 or fr % 3):
+            continue
+
+        x = int(x)
+        y = int(y)
+        w = int(w)
+        h = int(h)
+        roi_slice = slice(y, y + h), slice(x, x + w), slice(None)
+        roi = image[roi_slice]
+        # print(roi_slice)
+
+        # frame = imutils.resize(roi, height=OUTPUT_HEIGHT, )
+        frame = cv2.resize(roi, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+        print(f"Frame: {fr}, {frame.shape}")
+        writer.write(frame)
+        # cv2.imshow("frame", frame)
+        # cv2.waitKey(10)
+
+    for x in range(framerate):
+        writer.write(frame)
+    writer.release()
+    print(f"Saved video.")
+
+
+make_gif()
