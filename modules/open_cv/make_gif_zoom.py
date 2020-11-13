@@ -106,7 +106,7 @@ def make_gif():
 
     frames_list.append(pil_image)
     frames_list.append(pil_image)
-    frames_list[0].save(f"zoom.gif", format="GIF", append_images=frames_list[1:],
+    frames_list[0].save(f"output/gif/zoom.gif", format="GIF", append_images=frames_list[1:],
                         save_all=True, optimize=False, duration=duration, loop=0)
     print(f"Saved GIF.")
 
@@ -134,7 +134,7 @@ def make_video():
 
     framerate = 10
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    path = "video.mp4"
+    path = "output/mp4/video.mp4"
     writer = cv2.VideoWriter(path, fourcc, framerate, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
 
     for x in range(framerate):

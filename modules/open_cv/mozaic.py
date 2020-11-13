@@ -151,19 +151,19 @@ def make_stamp_square(img_path):
 "Params"
 USE_HSV = False
 PIXEL_RATIO = 4
-AVATAR_SIZE = 20
+AVATAR_SIZE = 10
 SAVE_EXT = "jpg"
 
 "Input photo"
-target_path = "src_images/grumpy.jpg"
+target_path = "src_images/artorias_battle.jpg"
 output = get_mozaic(target_path, ignore_image_size=True)
 
 "Find non overwriting path"
-out_path = f"output/mozaic-000.{SAVE_EXT}"
+out_path = f"output/mozaic/mozaic-000.{SAVE_EXT}"
 num = 0
 while os.path.isfile(out_path):
     num += 1
-    out_path = f"output/mozaic-{num:>03}.{SAVE_EXT}"
+    out_path = f"output/mozaic/mozaic-{num:>03}.{SAVE_EXT}"
 
 "Save picture"
 cv2.imwrite(out_path, output)
