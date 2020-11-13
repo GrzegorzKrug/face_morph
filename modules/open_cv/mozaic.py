@@ -153,12 +153,14 @@ def make_stamp_square(img_path):
 
 "Params"
 USE_HSV = False
-PIXEL_RATIO = 5
+PIXEL_RATIO = 4
 AVATAR_SIZE = 50
 SAVE_EXT = "jpg"
 
 "Input photo"
-target_path = "src_images/space1.jpg"
+target_path = "src_images/cat.jpg"
+print(f"Started: {target_path}")
+
 name = str(os.path.basename(target_path)).split('.')[0]
 output = get_mozaic(target_path, ignore_image_size=True)
 
