@@ -67,10 +67,22 @@ def big_picture_viewer():
 def make_gif():
     FRAMES = 500
     OUTPUT_HEIGHT = 300
-    origin_x = 10_800 - 15
-    origin_y = 6_450
-    origin_width = 80
-    origin_height = 50
+    origin_x = 1_800
+    origin_y = 750
+
+    height, width, _ = image.shape
+    if height != width:
+        if height > width:
+            origin_width = 50
+            origin_height = int(height / (width / 50))
+        else:
+            origin_width = int(width / (height / 50))
+            origin_height = 50
+
+    else:
+        origin_width = 50
+        origin_height = 50
+    print(origin_height, origin_width)
 
     arr_x = np.linspace(origin_x, 0, FRAMES)
     arr_y = np.linspace(origin_y, 0, FRAMES)
@@ -89,7 +101,7 @@ def make_gif():
     frames_list = [pil_image, pil_image, pil_image]
 
     for fr, x, y, w, h in zip(range(FRAMES), arr_x, arr_y, arr_width, arr_height):
-        if 490 > fr > 20 and (fr % 2 or fr % 3 or fr % 4):
+        if 490 > fr > 10 and (fr % 2 or fr % 3 or fr % 4):
             continue
         print(f"Frame: {fr}")
         x = int(x)
@@ -106,7 +118,7 @@ def make_gif():
 
     frames_list.append(pil_image)
     frames_list.append(pil_image)
-    frames_list[0].save(f"output/gif/zoom.gif", format="GIF", append_images=frames_list[1:],
+    frames_list[0].save(f"output/gif/{name}.gif", format="GIF", append_images=frames_list[1:],
                         save_all=True, optimize=False, duration=duration, loop=0)
     print(f"Saved GIF.")
 
@@ -165,7 +177,9 @@ def make_video():
     print(f"Saved video.")
 
 
-image = cv2.imread("src_images/grumpy_big.jpg", cv2.IMREAD_COLOR)
+im_path = "src_images/loki-000.jpg"
+name = os.path.basename(im_path).split(".")[0]
+image = cv2.imread(im_path, cv2.IMREAD_COLOR)
 HEIGHT, WIDTH, _ = image.shape
 
 make_gif()

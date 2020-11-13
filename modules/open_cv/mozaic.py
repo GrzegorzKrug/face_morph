@@ -15,7 +15,10 @@ def time_it_dec(func):
         result = func(*args, **kwargs)
         time_end = time.time()
         duration = time_end - time0
-        print(f"{func.__name__} was executed in {duration:>6.2f}s")
+        if duration < 60:
+            print(f"{func.__name__} was executed in {duration:>6.2f}s")
+        else:
+            print(f"{func.__name__} was executed in {duration/60:>6.2f}m")
         return result
 
     return wrapper
@@ -24,8 +27,8 @@ def time_it_dec(func):
 @time_it_dec
 def create_palette():
     palette = {}
-    all_images = glob.glob("square_stamps/*//*.png", recursive=True)
-    all_images += glob.glob("square_stamps/*//*.jpg", recursive=True)
+    all_images = glob.glob("square_stamps/**/*.png", recursive=True)
+    all_images += glob.glob("square_stamps/**/*.jpg", recursive=True)
 
     for image_path in all_images:
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
@@ -127,8 +130,8 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
                         pass
                     else:
                         print(f"{err}")
-        timeend= time.time()
-        duration = timeend-time0
+        timeend = time.time()
+        duration = timeend - time0
         print(f"Row {cur_row} was executed in: {duration:>4.1f}s")
     return output
 
@@ -150,20 +153,21 @@ def make_stamp_square(img_path):
 
 "Params"
 USE_HSV = False
-PIXEL_RATIO = 4
-AVATAR_SIZE = 10
+PIXEL_RATIO = 5
+AVATAR_SIZE = 50
 SAVE_EXT = "jpg"
 
 "Input photo"
-target_path = "src_images/artorias_battle.jpg"
+target_path = "src_images/space1.jpg"
+name = str(os.path.basename(target_path)).split('.')[0]
 output = get_mozaic(target_path, ignore_image_size=True)
 
 "Find non overwriting path"
-out_path = f"output/mozaic/mozaic-000.{SAVE_EXT}"
+out_path = f"output/mozaic/{name}-000.{SAVE_EXT}"
 num = 0
 while os.path.isfile(out_path):
     num += 1
-    out_path = f"output/mozaic/mozaic-{num:>03}.{SAVE_EXT}"
+    out_path = f"output/mozaic/{name}-{num:>03}.{SAVE_EXT}"
 
 "Save picture"
 cv2.imwrite(out_path, output)
