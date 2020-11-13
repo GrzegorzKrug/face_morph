@@ -1,3 +1,5 @@
+from multiprocessing import Process, Queue, Pool
+
 import imutils
 import numpy as np
 import glob
@@ -49,7 +51,8 @@ def create_palette():
 
 
 # @time_it_dec
-def find_closes_image(_palette, targ_h, targ_s, targ_v):
+def find_closes_image(arguments):
+    _palette, targ_h, targ_s, targ_v = arguments
     error = 255 ** 2
     best = None
     for path, inner_dict in _palette.items():
@@ -69,7 +72,7 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
     h, w, c = target.shape
 
     palette = create_palette()
-    if h % PIXEL_RATIO or w % PIXEL_RATIO:
+    if (h % PIXEL_RATIO or w % PIXEL_RATIO) and not ignore_image_size:
         print(f"Invalid size, H:{h}%->{h % PIXEL_RATIO}, W:{w}->{w % PIXEL_RATIO}")
         sys.exit(0)
 
@@ -77,31 +80,46 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
             (h * AVATAR_SIZE // PIXEL_RATIO, w * AVATAR_SIZE // PIXEL_RATIO, 3),
             dtype=np.uint8
     )
+    # que = Queue(20)
+    pool = Pool(50)
 
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
-        print(f"Current row: {cur_row}")
+
+        time0 = time.time()
+        "Make Queue"
+        iter_like_orders = []
         for col_num, cur_col in enumerate(range(0, w, PIXEL_RATIO)):
             target_slice = slice(cur_row, cur_row + PIXEL_RATIO), slice(cur_col, cur_col + PIXEL_RATIO)
-            output_slice = (
-                    slice(row_num * AVATAR_SIZE, row_num * AVATAR_SIZE + AVATAR_SIZE),
-                    slice(col_num * AVATAR_SIZE, col_num * AVATAR_SIZE + AVATAR_SIZE)
-            )
 
-            roi = output[output_slice]
             if USE_HSV:
                 curr_target_color = target_hsv[target_slice]
             else:
                 curr_target_color = target[target_slice]
 
             hue, saturation, value = np.mean(curr_target_color, axis=0).mean(axis=0)
-            found = find_closes_image(palette, hue, saturation, value)
+            iter_like_orders.append([palette, hue, saturation, value])
+            # proc = Process(target=find_closes_image, args=(que, )
+            # proc.start()
+
+        results = pool.map(find_closes_image, iter_like_orders)
+
+        "Replace ROI"
+        for col_num, cur_col in enumerate(range(0, w, PIXEL_RATIO)):
+            output_slice = (
+                    slice(row_num * AVATAR_SIZE, row_num * AVATAR_SIZE + AVATAR_SIZE),
+                    slice(col_num * AVATAR_SIZE, col_num * AVATAR_SIZE + AVATAR_SIZE)
+            )
+
+            roi = output[output_slice]
+            found = results.pop(0)
+
             if found:
                 replacer = cv2.imread(found, cv2.IMREAD_COLOR)
                 replacer = imutils.resize(replacer, height=AVATAR_SIZE)
                 try:
                     roi[:, :, :] = replacer
                 except ValueError as err:
-                    if ignore_image_size and fill_border_at_error:
+                    if ignore_image_size and fill_border_at_error and False:
                         last_h, last_w, _ = roi.shape
                         replacer = replacer[0:last_h, 0:last_w, :]
                         roi[:, :, :] = replacer
@@ -109,6 +127,9 @@ def get_mozaic(targ_path, ignore_image_size=True, fill_border_at_error=False):
                         pass
                     else:
                         print(f"{err}")
+        timeend= time.time()
+        duration = timeend-time0
+        print(f"Row {cur_row} was executed in: {duration:>4.1f}s")
     return output
 
 
@@ -129,8 +150,8 @@ def make_stamp_square(img_path):
 
 "Params"
 USE_HSV = False
-PIXEL_RATIO = 4
-AVATAR_SIZE = 10
+PIXEL_RATIO = 5
+AVATAR_SIZE = 50
 SAVE_EXT = "jpg"
 
 "Input photo"
@@ -151,4 +172,4 @@ print(f"Saved to: {out_path}")
 "Preview"
 preview = imutils.resize(output, height=500)
 cv2.imshow("small preview", preview)
-cv2.waitKey(30_000)
+cv2.waitKey(10_000)
