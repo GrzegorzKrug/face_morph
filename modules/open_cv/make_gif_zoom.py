@@ -27,14 +27,11 @@ def on_bar_change(*args):
     # print(f"Args: {args}")
 
 
-image = cv2.imread("src_images/artorias_mozaic.jpg", cv2.IMREAD_COLOR)
-HEIGHT, WIDTH, _ = image.shape
-
-
 def big_picture_viewer():
+    max_y, max_x, _ = image.shape
     cv2.imshow("ROI", np.zeros((10, 10, 3)))
-    cv2.createTrackbar("ROI_X", "ROI", 21_244, 32_000, on_bar_change)
-    cv2.createTrackbar("ROI_Y", "ROI", 17_200, 18_000, on_bar_change)
+    cv2.createTrackbar("ROI_X", "ROI", 0, max_x, on_bar_change)
+    cv2.createTrackbar("ROI_Y", "ROI", 0, max_y, on_bar_change)
     cv2.createTrackbar("ROI_SIZE", "ROI", 800, 10_000, on_bar_change)
 
     while True:
@@ -70,8 +67,8 @@ def big_picture_viewer():
 def make_gif():
     FRAMES = 500
     OUTPUT_HEIGHT = 300
-    origin_x = 21_300 - 15
-    origin_y = 17_250
+    origin_x = 10_800 - 15
+    origin_y = 6_450
     origin_width = 80
     origin_height = 50
 
@@ -167,5 +164,8 @@ def make_video():
     writer.release()
     print(f"Saved video.")
 
+
+image = cv2.imread("src_images/grumpy_big.jpg", cv2.IMREAD_COLOR)
+HEIGHT, WIDTH, _ = image.shape
 
 make_gif()

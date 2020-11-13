@@ -150,8 +150,8 @@ def make_stamp_square(img_path):
 
 "Params"
 USE_HSV = False
-PIXEL_RATIO = 5
-AVATAR_SIZE = 50
+PIXEL_RATIO = 4
+AVATAR_SIZE = 20
 SAVE_EXT = "jpg"
 
 "Input photo"
