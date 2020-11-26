@@ -127,23 +127,20 @@ def make_gif(image, cx=None, cy=None, ):
     origin_x = 0 if origin_x < 0 else origin_x
     origin_y = origin_y - origin_height // 2
     origin_y = 0 if origin_y < 0 else origin_y
-
-    print(f"Y: {origin_height}, X:{origin_width}")
+    # print(f"Y: {origin_height}, X:{origin_width}")
+    # print(f"Ending height: {height}, width: {width}")
 
     arr_x = np.linspace(origin_x, 0, FRAMES)
     arr_y = np.linspace(origin_y, 0, FRAMES)
     arr_height = np.linspace(out_height, height, FRAMES)
     arr_width = np.linspace(out_width, width, FRAMES)
-    print(f"Ending height: {height}, width: {width}")
     roi_slice = slice(origin_y, origin_y + out_height), \
                 slice(origin_x, origin_x + out_width), \
                 slice(None)
 
     frame = image[roi_slice]
-    print("slice: ", roi_slice)
-    print(f"Before scaling: {frame.shape}")
     frame = scale_image_to_max_dim(frame, OUTPUT_GIF_MAX_SIZE)
-    print(f"Scaled to: {frame.shape}")
+
     pil_image = image_array_to_pillow(frame)
 
     framerate = 1 / 120
@@ -153,22 +150,22 @@ def make_gif(image, cx=None, cy=None, ):
     for fr, x, y, w, h in zip(range(FRAMES), arr_x, arr_y, arr_width, arr_height):
         if 490 > fr > 10 and (fr % 2 or fr % 3 or fr % 7):
             continue
-        # print(f"Frame: {fr}")
-        x = int(x)
-        y = int(y)
-        w = int(w)
-        h = int(h)
+        x = round(x)
+        y = round(y)
+        w = round(w)
+        h = round(h)
+        # print(f"Frame: {fr}: xy {x} - {y}, w:{w}, h:{h}")
         roi_slice = slice(y, y + h), slice(x, x + w), slice(None)
         roi = image[roi_slice]
-        # print(roi_slice)
 
-        frame = scale_image_to_max_dim(roi, OUTPUT_GIF_MAX_SIZE)
+        # frame = scale_image_to_max_dim(roi, OUTPUT_GIF_MAX_SIZE)  # sometimes is missing 1 pixel width/height
+        frame = cv2.resize(roi, (out_width, out_height))
         pil_image = image_array_to_pillow(frame)
         frames_list.append(pil_image)
 
     frames_list.append(pil_image)
     frames_list.append(pil_image)
-    frames_list[0].save(f"output/gif/{name}.gif", format="GIF", append_images=frames_list[1:],
+    frames_list[0].save(f"output/gif/{name}-pow{PROC_POWER}-siz{OUTPUT_GIF_MAX_SIZE}.gif", format="GIF", append_images=frames_list[1:],
                         save_all=True, optimize=False, duration=duration, loop=0)
     print(f"Saved GIF.")
 
@@ -308,7 +305,7 @@ def make_mozaic_and_gif(target_path, selection=None):
         all_pallettes = load_palette()
         palette = select_palette(all_pallettes, selection)
         mozaic = get_mozaic(image, palette, fill_border_at_error=FILL_BORDER_WHEN_CROP)
-        cv2.imwrite("mozaic.png", mozaic)
+        # cv2.imwrite(f"mozaic.png", mozaic)
         print(f"Mozaic size: {mozaic.shape}")
         make_gif(mozaic)
 
@@ -333,20 +330,30 @@ def select_palette(all_palettes, selection=None):
 
 
 "Params"
-USE_HSV = False
-PIXEL_RATIO = 1
+
+OUTPUT_GIF_MAX_SIZE = 500
+PROC_POWER = 200
+PIXEL_RATIO = round(OUTPUT_GIF_MAX_SIZE/PROC_POWER)
+print(f"PIXEL ratio: {PIXEL_RATIO}")
+print(f"Output size: {OUTPUT_GIF_MAX_SIZE}")
+print(f"Processing power: {PROC_POWER}")
+# USE_HSV = False
+# PIXEL_RATIO = 3
 AVATAR_SIZE = 50
-MAX_PIC_SIZE = 300
+# MAX_PIC_SIZE = 600
+MAX_PIC_SIZE = OUTPUT_GIF_MAX_SIZE
 SAVE_EXT = "jpg"
 FILL_BORDER_WHEN_CROP = True
-OUTPUT_GIF_MAX_SIZE = 300
-target_path = "src_images/loki_max500.jpg"
+OUTPUT_GIF_MAX_SIZE = MAX_PIC_SIZE  # This will reduce aliasing
+target_path = "src_images/shapes.png"
+# PROC_POWER = MAX_PIC_SIZE / PIXEL_RATIO
+
 
 "Consts"
 PAL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "palette"))
 PAL_PATH = os.path.join(PAL_DIR, "palettes.pickle")
 
 "Run"
-make_mozaic_and_gif(target_path, selection=["open", "joypix"])
+make_mozaic_and_gif(target_path, selection=["open"])
 # recreate_all_palettes()
 # load_palette()
